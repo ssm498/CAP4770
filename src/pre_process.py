@@ -1,9 +1,14 @@
-import matplotlib
-from matplotlib import pylab
 import pandas as pd
 
 # Import dataset (should be 35 attributes)
-my_data_df = pd.read_csv("./train.csv",
+def getTrain():
+       return getFile("data/raw/train.csv")
+
+def getTest():
+       return getFile("data/raw/test.csv")
+
+def getFile(csv):
+       return pd.read_csv(csv,
                      names=['ID', 'Loan Amount', 'Funded Amount', 'Funded Amount Investor', 'Term', 
                             'Batch Enrolled', 'Interest Rate', 'Grade', 'Sub Grade', 'Employment Duration', 
                             'Home Ownership', 'Verification Status', 'Payment Plan', 'Loan Title', 'Debit to Income', 
@@ -51,5 +56,3 @@ my_data_df = pd.read_csv("./train.csv",
                        },
                      na_values=['-'], 
                      encoding = "ISO-8859-1")
-# Display dataset if needed
-my_data_df

@@ -180,7 +180,7 @@ def getCategoricalData(df):
     cats = []
 
     for column in df.columns:
-        if pd.api.types.is_numeric_dtype(df[column]):
+        if not pd.api.types.is_numeric_dtype(df[column]):
             cats.append(column)
 
     return df[cats]

@@ -86,4 +86,4 @@ categories=[
     'debt consolidation loan', 'conso', 'Home Improvement Loan',
     'Loan Consolidation', 'Debt payoff', 'Lending loan', 'relief',
     'CC', 'loan1', 'Getting Ahead', 'Home loan', 'bills',
-    'n','f','w','INDIVIDUAL','JOINT']
+    'n','t','f','w','y','INDIVIDUAL','JOINT']

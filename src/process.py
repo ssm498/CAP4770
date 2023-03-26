@@ -2,6 +2,8 @@ import pandas as pd
 pd.options.mode.chained_assignment = None
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
@@ -27,7 +29,7 @@ def getTrainAndTestSet(df):
     # Concat nums and cats
     concatDf = pd.concat([train_nums, df_cat_encoded], axis=1, join='inner')
 
-    train_set, test_set = train_test_split(concatDf, test_size=0.2, random_state=50)
+    train_set, test_set = train_test_split(concatDf, test_size=0.2, random_state=10)
 
     return (train_set, test_set)
 
@@ -45,5 +47,24 @@ def testRandomForest(train_set, test_set):
 
     # Predictions
     preds = rf.predict(test_x)
+    
+    print("Accuracy: ", accuracy_score(preds,test_y))
+    print(confusion_matrix(test_y,preds))
+
+def testLogisticRegression(train_set, test_set):
+    # Random Forest
+    lr = LogisticRegression(solver='lbfgs', max_iter=5000)
+
+    train_x = train_set.drop(columns=['Loan Status'])
+    train_y = train_set['Loan Status']
+
+    test_x = test_set.drop(columns=['Loan Status'])
+    test_y = test_set['Loan Status']
+
+    lr.fit(train_x, train_y)
+
+    # Predictions
+    preds = lr.predict(test_x)
 
     print("Accuracy: ", accuracy_score(preds,test_y))
+    print(confusion_matrix(test_y,preds))

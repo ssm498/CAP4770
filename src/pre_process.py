@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import matplotlib.pyplot as plt
-
+from src import constants
 # Import dataset (should be 35 attributes)
 def getTrainSample():
     return getFile("data/raw/sampletrain.csv")
@@ -98,7 +98,6 @@ def detectOutliers(df, col_name, z_thresh=3):
     col_mean = np.mean(df[col_name])
     col_std = np.std(df[col_name])
     z_scores = abs((df[col_name] - col_mean) / col_std)
-    print(df[col_name])
     return list(np.where(z_scores > z_thresh)[0])
 
 def getOutlierIndexByZScore(df, colTypes, z_thresh=3):
@@ -175,12 +174,42 @@ def getNumericalData(df):
 
 def getCategoricalData(df):
     """
-    Returns categorical dataframe from a dataframe
+    Returns categorical dataframe from a dataframe + Loan status
     """
     cats = []
 
     for column in df.columns:
         if not pd.api.types.is_numeric_dtype(df[column]):
             cats.append(column)
+        if column == 'Loan Status':
+            cats.append(column)
 
     return df[cats]
+
+def pre_process_data(df):
+
+    # Report missing values in dataset
+    # if findMissingValues(df) == []: No missing values and this take up like 30 seconds so... yeah lol
+    print("No missing vlaues found")
+
+    # Remove indexes that contain 2 or more attributes with data more than 5 standard deviations away from mean
+    outlier_indexes = getOutlierIndexByZScore(df, constants.columnDataTypes,5)
+    mymap = {}
+    list_of_indexes = []
+    for key, value in outlier_indexes.items():
+        for index in value[0]:
+            mymap[index] = mymap.get(index, 0) + 1
+            # Saves the index in the dataframe where there are 3 or more outliers
+            if mymap[index] == 3:
+                list_of_indexes.append(index)
+                # Sets an attribute to '0' for later deletion of said row. 
+                df.loc[index, 'Loan Amount'] = 0
+    # Deletes the above indexes        
+    df2 = df.drop(df[df['Loan Amount'] == 0].index)
+
+    # Save two new data frames, one numerical, and one catagorical. 
+    numericalDF = getNumericalData(df2)
+    numericalDF.to_csv('./data/processed/numericalTrain', index=False)
+
+    catagoricalData = getCategoricalData(df2)
+    catagoricalData.to_csv('./data/processed/catagoricalTrain', index=False)

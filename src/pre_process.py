@@ -154,8 +154,8 @@ def getParallelGraph(df):
     'Total Collection Amount', 'Total Current Balance', 'Total Revolving Credit Limit', 
     'Loan Status'
     },
-    width=2400,
-    height=1600
+    width=1600,
+    height=1400
     )
 
     return fig

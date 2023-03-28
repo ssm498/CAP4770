@@ -100,6 +100,43 @@ def detectOutliers(df, col_name, z_thresh=3):
     z_scores = abs((df[col_name] - col_mean) / col_std)
     return list(np.where(z_scores > z_thresh)[0])
 
+def smoothDataFrame(df, col_name, z_thresh=3):
+    """
+    Takes in a data frame, column name, and z-score threshold and 
+    returns a list of indexes for rows containing outliers in each given column
+    
+    Small note: The index this spits out will be TWO below what we see on
+    the train.csv, this is because we deleted the column name info and the 
+    rows starts with number '1' on excel. 
+    """
+    col_mean = np.mean(df[col_name])
+    col_std = np.std(df[col_name])
+    z_scores = abs((df[col_name] - col_mean) / col_std)
+
+    # Create a copy of the original column
+    smoothed_col = df[col_name].copy()
+    
+    # Identify values outside of the threshold and replace them with smoothed values
+    smoothed_col[z_scores > z_thresh] = col_mean + np.sign(smoothed_col - col_mean) * z_thresh * col_std
+    
+    # Add the smoothed column to the DataFrame
+    return smoothed_col
+
+def smoothDataFrames(df, z_thresh=3):
+    """
+    Takes in a data frame and z-score threshold and returns a new data frame
+    with smoothed numerical columns where values outside the threshold are
+    replaced with values closer to the mean of the distribution
+    """
+    smoothed_df = df.copy()
+    
+    for col_name in df.columns:
+        if df[col_name].dtype in [np.int64, np.float64]:
+            smoothed_col = smoothDataFrame(df, col_name, z_thresh)
+            smoothed_df[col_name] = smoothed_col
+    
+    return smoothed_df
+
 def getOutlierIndexByZScore(df, colTypes, z_thresh=3):
     """
     Takes in a data frame and a dictionary of column names with their types and
@@ -120,10 +157,8 @@ def plot_data(df, x_axis=None):
     """
     for column in df.columns:
         if pd.api.types.is_numeric_dtype(df[column]):
-            # Create a scatter plot if data is numeric
-            x_data = df[x_axis] if x_axis is not None else df.index
-            plt.scatter(x_data, df[column])
-            plt.xlabel(x_axis if x_axis is not None else 'Index')
+            # Create a box plot if data is numeric
+            plt.boxplot(df[column])
             plt.ylabel(column)
             plt.show()
         else:
@@ -192,24 +227,32 @@ def pre_process_data(df):
     # if findMissingValues(df) == []: No missing values and this take up like 30 seconds so... yeah lol
     print("No missing vlaues found")
 
-    # Remove indexes that contain 2 or more attributes with data more than 5 standard deviations away from mean
-    outlier_indexes = getOutlierIndexByZScore(df, constants.columnDataTypes,5)
+    # Remove indexes that contain 2 or more attributes with data more than 2 standard deviations away from mean
+    outlier_indexes = getOutlierIndexByZScore(df, constants.columnDataTypes,2)
     mymap = {}
     list_of_indexes = []
     for key, value in outlier_indexes.items():
         for index in value[0]:
             mymap[index] = mymap.get(index, 0) + 1
             # Saves the index in the dataframe where there are 3 or more outliers
-            if mymap[index] == 3:
+            if mymap[index] == 1:
                 list_of_indexes.append(index)
                 # Sets an attribute to '0' for later deletion of said row. 
                 df.loc[index, 'Loan Amount'] = 0
     # Deletes the above indexes        
     df2 = df.drop(df[df['Loan Amount'] == 0].index)
 
-    # Save two new data frames, one numerical, and one catagorical. 
-    numericalDF = getNumericalData(df2)
-    numericalDF.to_csv('./data/processed/numericalTrain', index=False)
+    # Returns the data. 
+    return df2
 
-    catagoricalData = getCategoricalData(df2)
-    catagoricalData.to_csv('./data/processed/catagoricalTrain', index=False)
+def pre_process_data_smooth(df, z_thresh=3):
+
+    # Report missing values in dataset
+    # if findMissingValues(df) == []: No missing values and this take up like 30 seconds so... yeah lol
+    print("No missing vlaues found")
+
+    # Smooth data
+    df2 = smoothDataFrames(df,z_thresh)    
+
+    # Returns the data. 
+    return df2

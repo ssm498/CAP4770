@@ -67,7 +67,7 @@ def getFile(csv):
             'Total Collection Amount': float,
             'Total Current Balance': float,
             'Total Revolving Credit Limit': int,
-            'Loan Status': bool
+            'Loan Status': int
             },
         na_values=['-'], 
         encoding = "ISO-8859-1"
@@ -215,8 +215,6 @@ def getCategoricalData(df):
 
     for column in df.columns:
         if not pd.api.types.is_numeric_dtype(df[column]):
-            cats.append(column)
-        if column == 'Loan Status':
             cats.append(column)
 
     return df[cats]

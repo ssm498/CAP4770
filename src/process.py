@@ -10,10 +10,12 @@ from src import pre_process
 from src import constants
 
 def getTrainAndTestSet(df):
+    
     train_nums = pre_process.getNumericalData(df)
     train_cats = pre_process.getCategoricalData(df)
 
     # Drop nonuseful columns
+    train_nums.drop(columns=['Accounts Delinquent'], inplace=True)
     train_nums.drop(columns=['ID'], inplace=True)
     train_cats.drop(columns=['Batch Enrolled'], inplace=True)
 

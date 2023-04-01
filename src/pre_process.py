@@ -151,7 +151,7 @@ def getOutlierIndexByZScore(df, colTypes, z_thresh=3):
            
 def plot_data(df, x_axis=None):
     """
-    Visually represents each attribute against the loan status attribute.
+    Visually represents each attribute against the loan status attribute as a boxplot.
     Only purpose of this is to study the data, cause it is hard to 
     interprate without a model. 
     """
@@ -254,3 +254,22 @@ def pre_process_data_smooth(df, z_thresh=3):
 
     # Returns the data. 
     return df2
+
+# Normalizes numerical data between 500 and 1000.
+def normalize_data(df):
+    
+    normalized_df = pd.DataFrame()
+
+    for col in df.columns:
+        # check if the column is numerical
+        if pd.api.types.is_numeric_dtype(df[col]) and col != 'Loan Status':
+            # normalize the column between -500 and 500
+            normalized_col = ((df[col] - df[col].min()) /
+                              (df[col].max() - df[col].min())) * 1000
+            # add the normalized column to the new DataFrame
+            normalized_df[col] = normalized_col
+        else:
+            # if the column is not numerical, add it to the new DataFrame as is
+            normalized_df[col] = df[col]
+
+    return normalized_df

@@ -8,6 +8,7 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 import plotly.express as px
 from src import pre_process
 from src import constants
+from imblearn.over_sampling import RandomOverSampler
 
 def getTrainAndTestSet(df):
     
@@ -89,7 +90,7 @@ def testLogisticRegression(train_set, test_set):
     fig.show()
 
 def testKNeighborsClassifier(train_set, test_set):
-    kn = KNeighborsClassifier()
+    kn = KNeighborsClassifier(leaf_size=60, weights='distance')
 
     train_x = train_set.drop(columns=['Loan Status'])
     train_y = train_set['Loan Status']
@@ -107,3 +108,49 @@ def testKNeighborsClassifier(train_set, test_set):
     print(confusion_matrix(test_y,preds))
 
     #KNN Does not have features that can be measured
+
+def getTrainAndTestSetWithOverSampling(df):
+    
+    train_nums = pre_process.getNumericalData(df)
+    train_cats = pre_process.getCategoricalData(df)
+
+    # Drop nonuseful columns
+    train_nums.drop(columns=['Accounts Delinquent'], inplace=True)
+    train_nums.drop(columns=['ID'], inplace=True)
+    train_cats.drop(columns=['Batch Enrolled'], inplace=True)
+
+    # Testing removing extra cols
+    train_cats.drop(columns=['Loan Title'], inplace=True)
+    train_cats.drop(columns=['Grade'], inplace=True)
+    train_cats.drop(columns=['Sub Grade'], inplace=True)
+
+    cats = pd.get_dummies(train_cats, columns=[
+        #'Grade', 
+        #'Sub Grade', 
+        'Employment Duration', 
+        'Verification Status',
+        'Payment Plan',
+        #'Loan Title',
+        'Initial List Status',
+        'Application Type'
+        ], drop_first=True)
+
+    # Concat nums and cats
+    concatDf = pd.concat([train_nums, cats], axis=1, join='inner')
+
+    # Separate the target variable from the features
+    X = concatDf.drop(columns=['Loan Status'])
+    y = concatDf['Loan Status']
+
+    # Apply random oversampling
+    ros = RandomOverSampler(random_state=42)
+    X_resampled, y_resampled = ros.fit_resample(X, y)
+
+    # Split the resampled data into train and test sets
+    train_x, test_x, train_y, test_y = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=42)
+
+    # Create the train and test sets as dataframes
+    train_set = pd.concat([train_x, train_y], axis=1)
+    test_set = pd.concat([test_x, test_y], axis=1)
+
+    return (train_set, test_set)
